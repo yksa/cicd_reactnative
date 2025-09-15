@@ -78,7 +78,7 @@ jobs:
         # env:
         #   JAVA_OPTS: '-Xmx2048m -Dkotlin.daemon.jvm.options="-Xmx2048m"'
 
-      # --- 🚀 Deploy to Firebase App Distribution ---
+      # --- 🚀 Deploy to Firebase App Distributionn ---
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@latest
 
