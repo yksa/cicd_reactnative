@@ -71,8 +71,8 @@ jobs:
       # --- 🛠 Build Release AAB (Recommended) ---
       - name: Build Android Release (AAB)
         run: cd android && ./gradlew bundleRelease --stacktrace
-        env:
-          JAVA_OPTS: '-Xmx2048m -Dkotlin.daemon.jvm.options="-Xmx2048m"'
+        # env:
+        #   JAVA_OPTS: '-Xmx2048m -Dkotlin.daemon.jvm.options="-Xmx2048m"'
 
       # --- 🚀 Deploy to Firebase App Distribution ---
       - name: Install Firebase CLI
