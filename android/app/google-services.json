@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1098786552320",
+    "project_id": "cicd-reactnative-2f7e0",
+    "storage_bucket": "cicd-reactnative-2f7e0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1098786552320:android:3d878f932a5f67ec1776e5",
+        "android_client_info": {
+          "package_name": "com.cicd_reactnative"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBi6NldIyHX2kg5-rw6gBsRx3RqOkz2xwQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
