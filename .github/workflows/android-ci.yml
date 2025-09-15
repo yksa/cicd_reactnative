@@ -84,7 +84,7 @@ jobs:
 
       # --- 📦 Optional: Save AAB as Artifact ---
       - name: Upload AAB to Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-release.aab
           path: android/app/build/outputs/bundle/release/app-release.aab
