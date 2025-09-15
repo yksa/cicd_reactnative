@@ -16,14 +16,22 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: '24'
+
+      - name: Install dependencies
+        run: yarn
+
+      # - name: Setup Java
+      #   uses: actions/setup-java@v4
+      #   with:
+      #     distribution: 'temurin'
+      #     java-version: '17'
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
+          java-version: '24'
           distribution: 'temurin'
-          java-version: '17'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v1
