@@ -21,12 +21,6 @@ jobs:
       - name: Install Node Dependencies
         run: yarn
 
-      # - name: Setup Java
-      #   uses: actions/setup-java@v4
-      #   with:
-      #     distribution: 'temurin'
-      #     java-version: '17'
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
