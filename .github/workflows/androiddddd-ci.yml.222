@@ -1,0 +1,128 @@
+name: React Native Android CI/CD
+
+on:
+  push:
+    branches:
+      - staging   # Change to your desired branch (e.g., release, main)
+
+jobs:
+  build-and-distribute:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Node Dependencies
+        run: yarn
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Install NDK and CMake
+        run: |
+          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "ndk;27.1.12297006" "cmake;3.22.1" "build-tools;36.0.0" "platforms;android-36"
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # - name: Install Dependencies
+      #   run: npm install
+
+      # --- 🔐 Decode Keystore ---
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/my-upload-key.keystore
+
+      # --- 🔑 Configure Signing in gradle.properties ---
+      - name: Set up Keystore Properties
+        run: |
+          cat >> android/gradle.properties << EOF
+          MYAPP_UPLOAD_STORE_FILE=my-upload-key.keystore
+          MYAPP_UPLOAD_KEY_ALIAS=${{ secrets.KEY_ALIAS }}
+          MYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
+          MYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      # --- 🔐 Firebase Service Account for Auth ---
+      - name: Write Firebase Service Account
+        run: |
+          mkdir -p firebase
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > firebase/service-account.json
+
+      # --- 🛠 Build Release AAB (Recommended) ---
+      # - name: Build Android Release (AAB)
+      #   run: cd android && ./gradlew bundleRelease --stacktrace
+        # env:
+        #   JAVA_OPTS: '-Xmx2048m -Dkotlin.daemon.jvm.options="-Xmx2048m"'
+
+      # Build Android Release (APK)
+      - name: Build Android Release (APK)
+        run: cd android && ./gradlew assembleRelease --stacktrace
+
+      # # --- 🚀 Deploy to Firebase App Distributionn ---
+      # - name: Install Firebase CLI
+      #   run: npm install -g firebase-tools@latest
+
+      # - name: Distribute to Firebase App Distribution
+      #   run: |
+      #     firebase appdistribution:distribute \
+      #       "android/app/build/outputs/bundle/release/app-release.aab" \
+      #       --app ${{ secrets.FIREBASE_APP_ID }} \
+      #       --release-notes "Published from GitHub Actions - Commit: ${{ github.sha }}" \
+      #       --testers "yekyawswaraung@gmail.com,tester2@example.com" \
+      #       --groups "qa-team,developers"  # Optional: use tester groups defined in Firebase
+      #   env:
+      #     GOOGLE_APPLICATION_CREDENTIALS: ./firebase/service-account.json
+
+      # --- 🚀 Deploy to Firebase App Distributionn ---
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@latest
+
+      - name: Distribute to Firebase App Distribution
+        run: |
+          firebase appdistribution:distribute \
+            "android/app/build/outputs/apk/release/app-release.apk" \
+            --app ${{ secrets.FIREBASE_APP_ID }} \
+            --release-notes "Published from GitHub Actions - Commit: ${{ github.sha }}" \
+            --testers "yekyawswaraung@gmail.com" \
+            --groups "qa-team,developers"  # Optional: use tester groups defined in Firebase
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ./firebase/service-account.json
+
+      # # --- 📦 Optional: Save AAB as Artifact ---
+      # - name: Upload AAB to Artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: app-release.aab
+      #     path: android/app/build/outputs/bundle/release/app-release.aab
+
+      # --- 📦 Optional: Save APK as Artifact ---
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+
+      # --- 🧹 Cleanup Secrets (Optional but safe) ---
+      - name: Cleanup sensitive files
+        if: always()
+        run: |
+          rm -f android/app/my-upload-key.keystore
+          rm -rf firebase/

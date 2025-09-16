@@ -1,0 +1,88 @@
+name: React Native iOS CI/CD
+
+on:
+  push:
+    branches:
+      - staging   # Change to your desired release branch
+
+jobs:
+  build-and-distribute:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Node Dependencies
+        run: yarn
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'    # Use a Ruby version compatible with your Fastlane
+
+      - name: Install Bundler
+        run: gem install bundler
+
+      - name: Install Fastlane
+        run: bundle install
+        working-directory: ios
+
+      # Optional: Cache CocoaPods
+      - name: Cache CocoaPods
+        uses: actions/cache@v3
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install Pods
+        run: |
+          cd ios
+          bundle exec pod install
+
+      # --- 🔐 Setup Apple Credentials (match, sigh, etc. if needed) ---
+      # See Fastlane docs for App Store Connect API or match setup
+
+      # --- 🔐 Firebase Service Account for Auth ---
+      - name: Write Firebase Service Account
+        run: |
+          mkdir -p firebase
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > firebase/service-account.json
+
+      # --- 🛠 Build and Distribute iOS App (Fastlane) ---
+      - name: Build and Distribute iOS App (Fastlane)
+        run: |
+          cd ios
+          bundle exec fastlane beta \
+            --firebase_app_id "${{ secrets.FIREBASE_APP_ID }}" \
+            --firebase_service_credentials "../firebase/service-account.json" \
+            --release_notes "Published from GitHub Actions - Commit: ${{ github.sha }}" \
+            --testers "yekyawswaraung@gmail.com" \
+            --groups "qa-team,developers"
+        env:
+          # Set up any Apple or Fastlane required env vars here (e.g. FASTLANE_PASSWORD)
+          # FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # FASTLANE_SESSION: ${{ secrets.FASTLANE_SESSION }}
+          # APP_STORE_CONNECT_API_KEY_PATH: ${{ secrets.APP_STORE_CONNECT_API_KEY_PATH }}
+          # ...
+          GOOGLE_APPLICATION_CREDENTIALS: ./firebase/service-account.json
+
+      # --- 📦 Optional: Upload the IPA as Artifact ---
+      - name: Upload IPA to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.ipa
+          path: ios/app/build/*.ipa
+
+      # --- 🧹 Cleanup Secrets (Optional but safe) ---
+      - name: Cleanup sensitive files
+        if: always()
+        run: |
+          rm -rf firebase/
