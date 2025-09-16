@@ -107,7 +107,7 @@ jobs:
             "android/app/build/outputs/apk/release/app-release.apk" \
             --app ${{ secrets.FIREBASE_APP_ID }} \
             --release-notes "Published from GitHub Actions - Commit: ${{ github.sha }}" \
-            --testers "yekyawswaraung@gmail.com,tester2@example.com" \
+            --testers "yekyawswaraung@gmail.com" \
             --groups "qa-team,developers"  # Optional: use tester groups defined in Firebase
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ./firebase/service-account.json
