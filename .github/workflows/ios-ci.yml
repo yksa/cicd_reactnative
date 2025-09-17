@@ -24,7 +24,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'    # Use a Ruby version compatible with your Fastlane
+          ruby-version: '3.3'    # Use a Ruby version compatible with your Fastlane
 
       - name: Install Bundler
         run: gem install bundler
